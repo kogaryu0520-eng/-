@@ -3,314 +3,255 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <title>リアルタイム翻訳アプリ</title>
+  <title>多言語翻訳モニター</title>
 
   <style>
     body {
       margin: 0;
-      padding: 16px;
       font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      color: #222;
+    }
+
+    #translatedBox {
+      position: sticky;
+      top: 0;
+      z-index: 999;
       background: #111;
       color: #fff;
+      padding: 28px 20px;
+      font-size: 44px;
+      font-weight: bold;
+      line-height: 1.4;
+      min-height: 120px;
+      box-sizing: border-box;
     }
 
-    h1 {
-      font-size: 24px;
-      margin-bottom: 12px;
-    }
-
-    .box {
-      background: #1e1e1e;
-      border-radius: 12px;
-      padding: 16px;
-      margin-bottom: 16px;
-    }
-
-    label {
-      display: block;
-      margin-bottom: 8px;
-      font-size: 15px;
-      color: #ccc;
-    }
-
-    select {
-      width: 100%;
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
       padding: 12px;
-      font-size: 18px;
+      background: #222;
+    }
+
+    .tabs button {
+      flex: 1;
+      min-width: 120px;
+      padding: 14px 10px;
+      font-size: 16px;
+      border: none;
       border-radius: 8px;
-      border: none;
-      margin-bottom: 12px;
-    }
-
-    button {
-      width: 100%;
-      padding: 16px;
-      font-size: 20px;
-      border-radius: 10px;
-      border: none;
-      margin-top: 8px;
-      cursor: pointer;
-    }
-
-    .start {
-      background: #00c853;
-      color: #fff;
-    }
-
-    .stop {
-      background: #d50000;
-      color: #fff;
-    }
-
-    .clear {
       background: #555;
       color: #fff;
     }
 
-    .small {
-      font-size: 13px;
-      color: #aaa;
-      line-height: 1.6;
+    .tabs button.active {
+      background: #007aff;
+      font-weight: bold;
     }
 
-    .result-title {
-      font-size: 14px;
-      color: #aaa;
-      margin-bottom: 8px;
+    .controls {
+      padding: 16px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
     }
 
-    #translatedText {
-      font-size: 28px;
-      line-height: 1.6;
-      white-space: pre-wrap;
-      color: #00e676;
-      min-height: 80px;
-    }
-
-    #finalText {
-      font-size: 20px;
-      line-height: 1.6;
-      white-space: pre-wrap;
+    .controls button {
+      flex: 1;
+      min-width: 140px;
+      padding: 16px;
+      font-size: 18px;
+      border: none;
+      border-radius: 10px;
       color: #fff;
+    }
+
+    #startBtn {
+      background: #008000;
+    }
+
+    #stopBtn {
+      background: #cc0000;
+    }
+
+    textarea {
+      width: calc(100% - 32px);
+      margin: 16px;
+      height: 140px;
+      font-size: 22px;
+      padding: 12px;
+      box-sizing: border-box;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+
+    #sourceText {
+      margin: 16px;
+      padding: 12px;
+      background: #fff;
+      border-radius: 8px;
+      font-size: 20px;
       min-height: 60px;
     }
 
-    #interimText {
-      font-size: 18px;
-      line-height: 1.6;
-      white-space: pre-wrap;
-      color: #888;
-      min-height: 40px;
+    .label {
+      margin: 16px 16px 0;
+      font-weight: bold;
+      color: #555;
     }
 
-    .status {
-      font-size: 14px;
-      color: #ffeb3b;
-      margin-top: 8px;
+    #status {
+      margin: 0 16px 16px;
+      color: #666;
+      font-size: 16px;
     }
   </style>
 </head>
 
 <body>
 
-  <h1>リアルタイム翻訳</h1>
-
-  <div class="box">
-    <label for="targetLang">翻訳先</label>
-    <select id="targetLang">
-      <option value="vi">🇻🇳 ベトナム語</option>
-      <option value="en">🇺🇸 英語</option>
-      <option value="es">🇪🇸 スペイン語</option>
-      <option value="pt">🇧🇷 ポルトガル語</option>
-      <option value="zh-CN">🇨🇳 中国語</option>
-      <option value="id">🇮🇩 インドネシア語</option>
-    </select>
-
-    <button id="startBtn" class="start">音声認識スタート</button>
-    <button id="stopBtn" class="stop">ストップ</button>
-    <button id="clearBtn" class="clear">クリア</button>
-
-    <div id="status" class="status">待機中</div>
-
-    <p class="small">
-      精度を上げるコツ：ゆっくり・短く・一文ずつ話してください。<br>
-      途中の文字ではなく、確定した日本語だけを翻訳します。
-    </p>
+  <div id="translatedBox">
+    翻訳結果がここに表示されます
   </div>
 
-  <div class="box">
-    <div class="result-title">翻訳結果</div>
-    <div id="translatedText"></div>
+  <div class="tabs">
+    <button class="active" onclick="setLang('vi', this)">ベトナム語</button>
+    <button onclick="setLang('en', this)">英語</button>
+    <button onclick="setLang('es', this)">スペイン語</button>
+    <button onclick="setLang('pt', this)">ポルトガル語</button>
+    <button onclick="setLang('zh-CN', this)">中国語</button>
+    <button onclick="setLang('id', this)">インドネシア語</button>
   </div>
 
-  <div class="box">
-    <div class="result-title">日本語 確定文字</div>
-    <div id="finalText"></div>
+  <div class="controls">
+    <button id="startBtn" onclick="startMic()">マイク開始</button>
+    <button id="stopBtn" onclick="stopMic()">マイク停止</button>
   </div>
 
-  <div class="box">
-    <div class="result-title">日本語 認識中</div>
-    <div id="interimText"></div>
+  <div id="status">待機中</div>
+
+  <div class="label">音声認識された日本語</div>
+  <div id="sourceText"></div>
+
+  <div class="label">手入力でも翻訳できます</div>
+  <textarea id="inputText" placeholder="ここに日本語を入力"></textarea>
+
+  <div class="controls">
+    <button style="background:#007aff;" onclick="translateManual()">翻訳する</button>
   </div>
 
   <script>
-    const GAS_URL = "ここにGASのURLを入れてください";
+    const GAS_URL = "ここにGASのウェブアプリURLを貼ってください";
 
-    let recognition;
-    let isRecognizing = false;
-    let finalTextAll = "";
-    let lastTranslatedText = "";
+    let targetLang = "vi";
+    let recognition = null;
+    let recognizing = false;
 
-    const startBtn = document.getElementById("startBtn");
-    const stopBtn = document.getElementById("stopBtn");
-    const clearBtn = document.getElementById("clearBtn");
+    function setLang(lang, btn) {
+      targetLang = lang;
 
-    const targetLang = document.getElementById("targetLang");
-    const statusEl = document.getElementById("status");
-    const translatedTextEl = document.getElementById("translatedText");
-    const finalTextEl = document.getElementById("finalText");
-    const interimTextEl = document.getElementById("interimText");
+      document.querySelectorAll(".tabs button").forEach(function(button) {
+        button.classList.remove("active");
+      });
 
-    const SpeechRecognition =
-      window.SpeechRecognition || window.webkitSpeechRecognition;
-
-    if (!SpeechRecognition) {
-      statusEl.textContent = "このブラウザは音声認識に対応していません。Google Chromeを使ってください。";
-      startBtn.disabled = true;
-    } else {
-      recognition = new SpeechRecognition();
-
-      recognition.lang = "ja-JP";
-      recognition.continuous = true;
-      recognition.interimResults = true;
-      recognition.maxAlternatives = 3;
-
-      recognition.onstart = function () {
-        isRecognizing = true;
-        statusEl.textContent = "音声認識中";
-      };
-
-      recognition.onend = function () {
-        isRecognizing = false;
-        statusEl.textContent = "停止中";
-
-        // Chrome対策：意図せず止まった場合は自動再開
-        if (startBtn.dataset.active === "true") {
-          setTimeout(() => {
-            try {
-              recognition.start();
-            } catch (e) {}
-          }, 500);
-        }
-      };
-
-      recognition.onerror = function (event) {
-        statusEl.textContent = "音声認識エラー：" + event.error;
-      };
-
-      recognition.onresult = function (event) {
-        let interimText = "";
-        let confirmedText = "";
-
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          let transcript = event.results[i][0].transcript;
-
-          if (event.results[i].isFinal) {
-            confirmedText += transcript;
-          } else {
-            interimText += transcript;
-          }
-        }
-
-        interimTextEl.textContent = interimText;
-
-        if (confirmedText.trim() !== "") {
-          finalTextAll += confirmedText + "\n";
-          finalTextEl.textContent = finalTextAll;
-
-          translateText(confirmedText);
-        }
-      };
+      btn.classList.add("active");
     }
 
-    startBtn.addEventListener("click", function () {
-      if (!recognition) return;
+    function translateManual() {
+      const text = document.getElementById("inputText").value.trim();
+      if (!text) return;
 
-      startBtn.dataset.active = "true";
-
-      if (!isRecognizing) {
-        try {
-          recognition.start();
-        } catch (e) {}
-      }
-    });
-
-    stopBtn.addEventListener("click", function () {
-      startBtn.dataset.active = "false";
-
-      if (recognition && isRecognizing) {
-        recognition.stop();
-      }
-
-      statusEl.textContent = "停止しました";
-    });
-
-    clearBtn.addEventListener("click", function () {
-      finalTextAll = "";
-      lastTranslatedText = "";
-      finalTextEl.textContent = "";
-      interimTextEl.textContent = "";
-      translatedTextEl.textContent = "";
-      statusEl.textContent = "クリアしました";
-    });
-
-    targetLang.addEventListener("change", function () {
-      translatedTextEl.textContent = "";
-      lastTranslatedText = "";
-
-      if (finalTextAll.trim() !== "") {
-        translateText(finalTextAll);
-      }
-    });
+      document.getElementById("sourceText").textContent = text;
+      translateText(text);
+    }
 
     function translateText(text) {
-      if (!text || text.trim() === "") return;
+      document.getElementById("status").textContent = "翻訳中...";
 
-      const lang = targetLang.value;
       const callbackName = "callback_" + Date.now();
 
-      statusEl.textContent = "翻訳中...";
-
-      window[callbackName] = function (data) {
-        try {
-          if (data.error) {
-            statusEl.textContent = "翻訳エラー：" + data.error;
-          } else {
-            if (text === finalTextAll) {
-              lastTranslatedText = data.translated;
-            } else {
-              lastTranslatedText += data.translated + "\n";
-            }
-
-            translatedTextEl.textContent = lastTranslatedText;
-            statusEl.textContent = "翻訳完了";
-          }
-        } finally {
-          delete window[callbackName];
-          script.remove();
+      window[callbackName] = function(data) {
+        if (data.error) {
+          document.getElementById("translatedBox").textContent = "エラー：" + data.error;
+        } else {
+          document.getElementById("translatedBox").textContent = data.translated;
         }
+
+        document.getElementById("status").textContent = "翻訳完了";
+
+        delete window[callbackName];
+        script.remove();
       };
 
       const script = document.createElement("script");
-
       script.src =
         GAS_URL +
         "?text=" + encodeURIComponent(text) +
-        "&target=" + encodeURIComponent(lang) +
+        "&target=" + encodeURIComponent(targetLang) +
         "&callback=" + callbackName;
 
       document.body.appendChild(script);
+    }
+
+    function setupSpeechRecognition() {
+      const SpeechRecognition =
+        window.SpeechRecognition || window.webkitSpeechRecognition;
+
+      if (!SpeechRecognition) {
+        alert("このブラウザは音声入力に対応していません。iPadのSafariで試してください。");
+        return null;
+      }
+
+      const recog = new SpeechRecognition();
+
+      recog.lang = "ja-JP";
+      recog.continuous = true;
+      recog.interimResults = false;
+
+      recog.onstart = function() {
+        recognizing = true;
+        document.getElementById("status").textContent = "マイク入力中...";
+      };
+
+      recog.onresult = function(event) {
+        const result = event.results[event.results.length - 1];
+        const text = result[0].transcript;
+
+        document.getElementById("sourceText").textContent = text;
+        document.getElementById("inputText").value = text;
+
+        translateText(text);
+      };
+
+      recog.onerror = function(event) {
+        document.getElementById("status").textContent =
+          "音声認識エラー：" + event.error;
+      };
+
+      recog.onend = function() {
+        recognizing = false;
+        document.getElementById("status").textContent = "マイク停止中";
+      };
+
+      return recog;
+    }
+
+    function startMic() {
+      if (!recognition) {
+        recognition = setupSpeechRecognition();
+      }
+
+      if (recognition && !recognizing) {
+        recognition.start();
+      }
+    }
+
+    function stopMic() {
+      if (recognition && recognizing) {
+        recognition.stop();
+      }
     }
   </script>
 
